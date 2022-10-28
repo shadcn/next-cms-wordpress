@@ -1,57 +1,52 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+import Image from "next/image"
+import Link from "next/link"
 
-export default function Home() {
+import { wpClient } from "@/lib/wp-client"
+import { formatDate } from "@/lib/utils"
+
+// This is the home page.
+// On the home page, I want to display a list of the latest posts.
+
+// I want the home page to be dynamic i.e I want Next.js to refetch the data
+// for this page every time I visit it.
+// I set revalidate to 0.
+// This is like getServerSideProps.
+export const revalidate = 0
+
+export default async function Home() {
+  // Fetch all posts.
+  const posts = await wpClient.getPosts()
+
   return (
-    <div className={styles.container}>
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js 13!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://beta.nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js 13</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Explore the Next.js 13 playground.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates/next.js/app-directory?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>Deploy your Next.js site to a public URL with Vercel.</p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+    <div className="grid gap-10">
+      {posts.map((post) => (
+        <article key={post.id}>
+          <Link href={`/posts/${post.slug}`}>
+            <h2 className="mt-0">{post.title}</h2>
+          </Link>
+          <div className="flex items-center space-x-2">
+            {post.author && (
+              <>
+                <Image
+                  src={post.author.node.avatar.url}
+                  alt="Picture"
+                  width={40}
+                  height={40}
+                  className="m-0 rounded-full"
+                />
+                <span>
+                  {" "}
+                  Posted by <strong>{post.author.node.name}</strong>
+                </span>
+              </>
+            )}
+            {post.date && <span> on {formatDate(post.date)}</span>}
+          </div>
+          {post.excerpt && (
+            <div dangerouslySetInnerHTML={{ __html: post.excerpt }} />
+          )}
+        </article>
+      ))}
     </div>
   )
 }
